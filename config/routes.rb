@@ -1,5 +1,6 @@
 SampleApp::Application.routes.draw do
-  get "users/new"
+  #get "users/new" -> not needed when having resources :users
+  resources :users
   #way without named routes
   #get "static_pages/home"
   #get "static_pages/help"
