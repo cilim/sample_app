@@ -1,13 +1,7 @@
 SampleApp::Application.routes.draw do
-  #get "users/new" -> not needed when having resources :users
   resources :users
   resources :sessions, only: [:new, :create, :destroy]
-  #way without named routes
-  #get "static_pages/home"
-  #get "static_pages/help"
-  #get "static_pages/about"
-  #get "static_pages/contact"
-  #way with named routes
+  resources :microposts, only: [:create, :destroy]
   root  'static_pages#home'
   match '/signup',  to: 'users#new',            via: 'get'
   match '/signin',  to: 'sessions#new',         via: 'get'
