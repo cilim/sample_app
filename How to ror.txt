@@ -1,0 +1,292 @@
+***********Setting up***********
+
+Run: rails new app_name --skip-test-unit
+
+Change gemfile to:
+
+source 'https://rubygems.org'
+ruby '2.0.0'
+#ruby-gemset=railstutorial_rails_4_0
+
+gem 'rails', '4.0.4'
+gem 'bootstrap-sass', '2.3.2.0'
+gem 'sprockets', '2.11.0'
+gem 'bcrypt-ruby', '3.1.2'
+gem 'faker', '1.1.2'
+gem 'will_paginate', '3.0.4'
+gem 'bootstrap-will_paginate', '0.0.9'
+
+group :development, :test do
+  gem 'sqlite3', '1.3.8'
+  gem 'rspec-rails', '2.13.1'
+  gem 'spork-rails', '4.0.0'
+  gem 'guard-spork', '1.5.0'
+  gem 'childprocess', '0.3.6'
+end
+
+group :test do
+  gem 'selenium-webdriver', '2.35.1'
+  gem 'capybara', '2.1.0'
+  gem 'factory_girl_rails', '4.2.1'
+  gem 'database_cleaner', github: 'bmabey/database_cleaner'
+  gem 'libnotify', '0.8.0'
+end
+
+gem 'sass-rails', '4.0.1'
+gem 'uglifier', '2.1.1'
+gem 'coffee-rails', '4.0.1'
+gem 'jquery-rails', '3.0.4'
+gem 'turbolinks', '1.1.1'
+gem 'jbuilder', '1.0.2'
+
+group :doc do
+  gem 'sdoc', '0.3.20', require: false
+end
+
+group :production do
+  gem 'pg', '0.15.1'
+  gem 'rails_12factor', '0.0.2'
+end
+
+Install gems with following 3:
+
+bundle install --without production
+bundle update
+bundle install
+
+Change your config/initializers/secret_token.rb
+
+# Be sure to restart your server when you modify this file.
+
+# Your secret key is used for verifying the integrity of signed cookies.
+# If you change this key, all old signed cookies will become invalid!
+
+# Make sure the secret is at least 30 characters and all random,
+# no regular words or you'll be exposed to dictionary attacks.
+# You can use `rake secret` to generate a secure secret key.
+
+# Make sure your secret_key_base is kept private
+# if you're sharing your code publicly.
+require 'securerandom'
+
+def secure_token
+  token_file = Rails.root.join('.secret')
+  if File.exist?(token_file)
+    # Use the existing token.
+    File.read(token_file).chomp
+  else
+    # Generate a new token and store it in token_file.
+    token = SecureRandom.hex(64)
+    File.write(token_file, token)
+    token
+  end
+end
+
+SampleApp::Application.config.secret_key_base = secure_token
+
+Install rspec: rails generate rspec:install
+
+Augment the .gitignore file:
+
+# Ignore bundler config.
+/.bundle
+
+# Ignore the default SQLite database.
+/db/*.sqlite3
+/db/*.sqlite3-journal
+
+# Ignore all logfiles and tempfiles.
+/log/*.log
+/tmp
+
+# Ignore other unneeded files.
+database.yml
+doc/
+*.swp
+*~
+.project
+.DS_Store
+.idea
+.secret
+
+
+Change spec/spec_helper to:
+require 'rubygems'
+require 'spork'
+
+Spork.prefork do
+  ENV["RAILS_ENV"] ||= 'test'
+  require File.expand_path("../../config/environment", __FILE__)
+  require 'rspec/rails'
+  require 'rspec/autorun'
+
+  # Requires supporting ruby files with custom matchers and macros, etc,
+  # in spec/support/ and its subdirectories.
+  Dir[Rails.root.join("spec/support/**/*.rb")].each {|f| require f}
+
+  # Checks for pending migrations before tests are run.
+  # If you are not using ActiveRecord, you can remove this line.
+  ActiveRecord::Migration.check_pending! if defined?(ActiveRecord::Migration)
+
+  RSpec.configure do |config|
+    # ## Mock Framework
+    #
+    # If you prefer to use mocha, flexmock or RR, uncomment the appropriate line:
+    #
+    # config.mock_with :mocha
+    # config.mock_with :flexmock
+    # config.mock_with :rr
+
+    # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
+    config.fixture_path = "#{::Rails.root}/spec/fixtures"
+
+    # If you're not using ActiveRecord, or you'd prefer not to run each of your
+    # examples within a transaction, remove the following line or assign false
+    # instead of true.
+    config.use_transactional_fixtures = true
+
+    # If true, the base class of anonymous controllers will be inferred
+    # automatically. This will be the default behavior in future versions of
+    # rspec-rails.
+    config.infer_base_class_for_anonymous_controllers = false
+
+    # Run specs in random order to surface order dependencies. If you find an
+    # order dependency and want to debug it, you can fix the order by providing
+    # the seed, which is printed after each run.
+    #     --seed 1234
+    config.order = "random"
+    config.include Capybara::DSL
+  end
+end
+
+Spork.each_run do
+  # This code will be run each time you run your specs.
+
+end
+
+Set up the application layout in app/views/layouts/application.html.erb:
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= full_title(yield(:title)) %></title>
+    <%= stylesheet_link_tag "application", media: "all",
+                                           "data-turbolinks-track" => true %>
+    <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
+    <%= csrf_meta_tags %>
+    <%= render 'layouts/shim' %>
+  </head>
+  <body>
+    <%= render 'layouts/header' %>
+    <div class="container">
+      <% flash.each do |key, value| %>
+        <%= content_tag(:div, value, class: "alert alert-#{key}") %>
+      <% end %>
+      <%= yield %>
+      <%= render 'layouts/footer' %>
+      <%= debug(params) if Rails.env.development? %>
+    </div>
+  </body>
+</html>
+
+The header is in the same folder under the name _header.html.erb, and the footer is _footer.html.erb.
+There is also the piece of code for IE browser which is named _shim.html.erb:
+<!--[if lt IE 9]>
+<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
+Changing the config/application.rb to make bootstrap--sass compatible with the asset pipeline
+require File.expand_path('../boot', __FILE__)
+
+# Pick the frameworks you want:
+require "active_record/railtie"
+require "action_controller/railtie"
+require "action_mailer/railtie"
+require "sprockets/railtie"
+# require "rails/test_unit/railtie"
+
+# Require the gems listed in Gemfile, including any gems
+# you've limited to :test, :development, or :production.
+Bundler.require(:default, Rails.env)
+
+module SampleApp
+  class Application < Rails::Application
+    # Settings in config/environments/* take precedence over those specified here.
+    # Application configuration should go into files in config/initializers
+    # -- all .rb files in that directory are automatically loaded.
+
+    # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
+    # Run "rake -D time" for a list of tasks for finding time zone names. Default is UTC.
+    # config.time_zone = 'Central Time (US & Canada)'
+
+    # The default locale is :en and all translations from config/locales/*.rb,yml are auto loaded.
+    # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
+    # config.i18n.default_locale = :de
+    config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif)
+    I18n.enforce_available_locales = true
+  end
+end
+
+
+AFTER you create the static pages create file app/assets/stylesheets/custom.css.scss with @import "bootstrap"; on top and there should all the css go.
+
+Add //= require bootstrap as a line to app/assets/javascripts/application.js
+
+Redefine bcrypt cost factor to speed up testing process in config/environments/test.rb:
+ActiveModel::SecurePassword.min_cost = true
+
+
+
+***********DEVELOPING***********
+
+Generating without test framework: rails generate controller StaticPages home help --no-test-framework
+
+Generating tests: rails generate integration_test static_pages
+
+Set up the root path in config/routes.rb to your dedicated home/index page you have as: root  'static_pages#home'
+
+or some other pages/actions like so:
+match '/help',    to: 'static_pages#help',    via: 'get'
+match '/signin',  to: 'sessions#new',         via: 'get'
+
+When making urls on app/views you have to have a method in the controller and you link it like this:
+<%= link_to "Sign up now!", signup_path, class: "btn btn-large btn-primary" %>
+
+Signup is the wished name in the routes which calls the users controller new action:
+match '/signup',  to: 'users#new',            via: 'get'
+
+If you do any change to the db (models) you have to run: 
+bundle exec rake db:migrate
+bundle exec rake test:prepare
+
+Valid email regex: VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
+
+If you need to add some changes to the db (unique, indexes etc) then run:
+rails generate migration add_index_to_users_email and in db/migrate you can find the file.
+There are numerous methods to call here:
+add_index :users, :email, unique: true
+add_column :users, :password_digest, :string
+
+For testing with factorygirl. If you have any user models or any kinds of models which you wish you create quickly you can use factorygirl for that. Create a spec/factories.rb like this:
+FactoryGirl.define do
+  factory :user do
+    name     "Michael Hartl"
+    email    "michael@example.com"
+    password "foobar"
+    password_confirmation "foobar"
+  end
+end
+
+and call FactoryGirl.create(:user) in the rspecs to create a user object.
+
+If you have sessions then you need to include the created sessions helper which came during the generation of the session controller to the app/controllers/application_controller.rb: include SessionsHelper
+
+
+***********PRODUCTION***********
+
+In config/environments/production.rb uncomment the 43rd line: config.force_ssl = true
+
+Deploying to heroku server: git push heroku
+
+Reseting the db on heroku: heroku pg:reset DATABASE
+
+Deploying db migration to heroku production: heroku run rake db:migrate
